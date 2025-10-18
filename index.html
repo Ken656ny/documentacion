@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Laravel - Guía Rápida</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        h1, h2 {
+            color: #58a6ff;
+        }
+        pre {
+            background: #161b22;
+            color: #00ffae;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        code {
+            background: #1f2937;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #93c5fd;
+        }
+        section {
+            margin-bottom: 3rem;
+        }
+        ul {
+            margin-left: 20px;
+        }
+        a {
+            color: #58a6ff;
+        }
+        .cmd {
+            color: #ffca28;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⚡ CRUD en Laravel - Guía Súper Rápida</h1>
+    <p>
+        Esta guía muestra cómo crear un CRUD completo (<strong>Create, Read, Update, Delete</strong>) en Laravel 
+        de forma sencilla y directa, ideal si vienes de <strong>Flask o Django</strong>.
+    </p>
+
+    <section>
+        <h2>1️⃣ Crear modelo, migración y controlador</h2>
+        <p>Ejecuta este comando en tu terminal:</p>
+        <pre><code class="cmd">php artisan make:model Estudiante -mcr</code></pre>
+        <p>Esto crea:</p>
+        <ul>
+            <li>📄 <code>app/Models/Estudiante.php</code></li>
+            <li>📄 <code>database/migrations/...create_estudiantes_table.php</code></li>
+            <li>📄 <code>app/Http/Controllers/EstudianteController.php</code></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>2️⃣ Editar la migración</h2>
+        <p>Abre el archivo <code>create_estudiantes_table.php</code> y deja esto:</p>
+        <pre><code>
+public function up(): void
+{
+    Schema::create('estudiantes', function (Blueprint $table) {
+        $table->id();
+        $table->string('nombre');
+        $table->string('email');
+        $table->string('telefono');
+        $table->timestamps();
+    });
+}
+        </code></pre>
+        <p>Guarda y ejecuta:</p>
+        <pre><code class="cmd">php artisan migrate</code></pre>
+    </section>
+
+    <section>
+        <h2>3️⃣ Configurar el modelo</h2>
+        <pre><code>
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Estudiante extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['nombre', 'email', 'telefono'];
+}
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>4️⃣ Rutas</h2>
+        <p>Archivo: <code>routes/web.php</code></p>
+        <pre><code>
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EstudianteController;
+
+Route::get('/', function () {
+    return redirect('/estudiantes');
+});
+
+Route::resource('estudiantes', EstudianteController::class);
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>5️⃣ Controlador CRUD</h2>
+        <p>Archivo: <code>app/Http/Controllers/EstudianteController.php</code></p>
+        <pre><code>
+namespace App\Http\Controllers;
+
+use App\Models\Estudiante;
+use Illuminate\Http\Request;
+
+class EstudianteController extends Controller
+{
+    public function index() {
+        $estudiantes = Estudiante::all();
+        return view('estudiantes.index', compact('estudiantes'));
+    }
+
+    public function create() {
+        return view('estudiantes.create');
+    }
+
+    public function store(Request $request) {
+        $request->validate([
+            'nombre' => 'required',
+            'email' => 'required|email',
+            'telefono' => 'required'
+        ]);
+
+        Estudiante::create($request->all());
+        return redirect()->route('estudiantes.index')->with('success', 'Estudiante agregado');
+    }
+
+    public function edit(Estudiante $estudiante) {
+        return view('estudiantes.edit', compact('estudiante'));
+    }
+
+    public function update(Request $request, Estudiante $estudiante) {
+        $request->validate([
+            'nombre' => 'required',
+            'email' => 'required|email',
+            'telefono' => 'required'
+        ]);
+
+        $estudiante->update($request->all());
+        return redirect()->route('estudiantes.index')->with('success', 'Estudiante actualizado');
+    }
+
+    public function destroy(Estudiante $estudiante) {
+        $estudiante->delete();
+        return redirect()->route('estudiantes.index')->with('success', 'Estudiante eliminado');
+    }
+}
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>6️⃣ Vistas (Blade)</h2>
+        <p>Crea la carpeta <code>resources/views/estudiantes</code> con estos 3 archivos:</p>
+
+        <h3>📄 index.blade.php</h3>
+        <pre><code>
+&lt;h1&gt;Listado de Estudiantes&lt;/h1&gt;
+&lt;a href="{{ route('estudiantes.create') }}"&gt;Agregar Nuevo&lt;/a&gt;
+
+@if(session('success'))
+    &lt;p style="color:green"&gt;{{ session('success') }}&lt;/p&gt;
+@endif
+
+&lt;table border="1" cellpadding="5"&gt;
+    &lt;tr&gt;
+        &lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Nombre&lt;/th&gt;&lt;th&gt;Email&lt;/th&gt;&lt;th&gt;Teléfono&lt;/th&gt;&lt;th&gt;Acciones&lt;/th&gt;
+    &lt;/tr&gt;
+    @foreach($estudiantes as $e)
+    &lt;tr&gt;
+        &lt;td&gt;{{ $e-&gt;id }}&lt;/td&gt;
+        &lt;td&gt;{{ $e-&gt;nombre }}&lt;/td&gt;
+        &lt;td&gt;{{ $e-&gt;email }}&lt;/td&gt;
+        &lt;td&gt;{{ $e-&gt;telefono }}&lt;/td&gt;
+        &lt;td&gt;
+            &lt;a href="{{ route('estudiantes.edit', $e-&gt;id) }}"&gt;Editar&lt;/a&gt;
+            &lt;form action="{{ route('estudiantes.destroy', $e-&gt;id) }}" method="POST" style="display:inline;"&gt;
+                @csrf
+                @method('DELETE')
+                &lt;button type="submit"&gt;Eliminar&lt;/button&gt;
+            &lt;/form&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+    @endforeach
+&lt;/table&gt;
+        </code></pre>
+
+        <h3>📄 create.blade.php</h3>
+        <pre><code>
+&lt;h1&gt;Agregar Estudiante&lt;/h1&gt;
+&lt;form action="{{ route('estudiantes.store') }}" method="POST"&gt;
+    @csrf
+    &lt;label&gt;Nombre:&lt;/label&gt;
+    &lt;input type="text" name="nombre"&gt;&lt;br&gt;
+    &lt;label&gt;Email:&lt;/label&gt;
+    &lt;input type="email" name="email"&gt;&lt;br&gt;
+    &lt;label&gt;Teléfono:&lt;/label&gt;
+    &lt;input type="text" name="telefono"&gt;&lt;br&gt;
+    &lt;button type="submit"&gt;Guardar&lt;/button&gt;
+&lt;/form&gt;
+        </code></pre>
+
+        <h3>📄 edit.blade.php</h3>
+        <pre><code>
+&lt;h1&gt;Editar Estudiante&lt;/h1&gt;
+&lt;form action="{{ route('estudiantes.update', $estudiante-&gt;id) }}" method="POST"&gt;
+    @csrf
+    @method('PUT')
+    &lt;label&gt;Nombre:&lt;/label&gt;
+    &lt;input type="text" name="nombre" value="{{ $estudiante-&gt;nombre }}"&gt;&lt;br&gt;
+    &lt;label&gt;Email:&lt;/label&gt;
+    &lt;input type="email" name="email" value="{{ $estudiante-&gt;email }}"&gt;&lt;br&gt;
+    &lt;label&gt;Teléfono:&lt;/label&gt;
+    &lt;input type="text" name="telefono" value="{{ $estudiante-&gt;telefono }}"&gt;&lt;br&gt;
+    &lt;button type="submit"&gt;Actualizar&lt;/button&gt;
+&lt;/form&gt;
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>7️⃣ Ejecutar proyecto</h2>
+        <p>Inicia el servidor de Laravel:</p>
+        <pre><code class="cmd">php artisan serve</code></pre>
+        <p>Abre en tu navegador:</p>
+        <a href="http://127.0.0.1:8000/estudiantes" target="_blank">http://127.0.0.1:8000/estudiantes</a>
+    </section>
+
+    <footer style="text-align:center; margin-top:3rem; color:#8b949e;">
+        Hecho con ❤️ por Cristhian | CRUD Laravel Documentación 2025
+    </footer>
+
+</body>
+</html>
