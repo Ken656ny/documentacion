@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Completa CRUD en Laravel</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e4e4e4;
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+        }
+        h1, h2, h3 {
+            color: #00bcd4;
+        }
+        code {
+            background-color: #1e1e1e;
+            color: #00ff9d;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #1e1e1e;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        section {
+            margin-bottom: 3rem;
+        }
+        a {
+            color: #64b5f6;
+        }
+        .cmd {
+            color: #ffca28;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🔥 Guía Completa para Crear un CRUD en Laravel</h1>
+    <p>
+        En esta guía aprenderás a crear un CRUD (<strong>Create, Read, Update, Delete</strong>) en Laravel paso a paso.
+        Ideal para principiantes que vienen de frameworks como Flask o Django.
+    </p>
+
+    <section>
+        <h2>1️⃣ Crear un nuevo proyecto Laravel</h2>
+        <pre><code class="cmd">composer create-project laravel/laravel crud-laravel</code></pre>
+        <p>Luego entra al proyecto:</p>
+        <pre><code class="cmd">cd crud-laravel</code></pre>
+        <p>Ejecuta el servidor de desarrollo:</p>
+        <pre><code class="cmd">php artisan serve</code></pre>
+        <p>Abre en tu navegador: <a href="http://127.0.0.1:8000" target="_blank">http://127.0.0.1:8000</a></p>
+    </section>
+
+    <section>
+        <h2>2️⃣ Configurar la base de datos</h2>
+        <p>Edita el archivo <code>.env</code>:</p>
+        <pre><code>
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=crud_laravel
+DB_USERNAME=root
+DB_PASSWORD=tu_contraseña
+        </code></pre>
+        <p>Crea la base de datos en MySQL antes de continuar.</p>
+    </section>
+
+    <section>
+        <h2>3️⃣ Crear la migración y el modelo</h2>
+        <pre><code class="cmd">php artisan make:model Estudiante -m</code></pre>
+        <p>Esto crea:</p>
+        <ul>
+            <li><code>app/Models/Estudiante.php</code></li>
+            <li><code>database/migrations/xxxx_create_estudiantes_table.php</code></li>
+        </ul>
+
+        <h3>Editar migración:</h3>
+        <pre><code>
+public function up(): void
+{
+    Schema::create('estudiantes', function (Blueprint $table) {
+        $table->id();
+        $table->string('nombre');
+        $table->string('email');
+        $table->string('telefono');
+        $table->timestamps();
+    });
+}
+        </code></pre>
+
+        <h3>Ejecutar migraciones:</h3>
+        <pre><code class="cmd">php artisan migrate</code></pre>
+    </section>
+
+    <section>
+        <h2>4️⃣ Crear el controlador</h2>
+        <pre><code class="cmd">php artisan make:controller EstudianteController --resource</code></pre>
+
+        <p>Esto crea un controlador con todos los métodos CRUD:</p>
+        <ul>
+            <li><code>index()</code> → listar estudiantes</li>
+            <li><code>create()</code> → mostrar formulario</li>
+            <li><code>store()</code> → guardar estudiante</li>
+            <li><code>edit()</code> → editar estudiante</li>
+            <li><code>update()</code> → actualizar datos</li>
+            <li><code>destroy()</code> → eliminar registro</li>
+        </ul>
+
+        <h3>Ejemplo de método <code>store()</code>:</h3>
+        <pre><code>
+public function store(Request $request)
+{
+    $request->validate([
+        'nombre' => 'required|string|max:255',
+        'email' => 'required|email',
+        'telefono' => 'required|string|max:20',
+    ]);
+
+    \App\Models\Estudiante::create($request->all());
+
+    return redirect()->route('estudiantes.index')
+                     ->with('success', 'Estudiante agregado correctamente');
+}
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>5️⃣ Configurar el modelo</h2>
+        <p>Archivo: <code>app/Models/Estudiante.php</code></p>
+        <pre><code>
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Estudiante extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['nombre', 'email', 'telefono'];
+}
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>6️⃣ Rutas</h2>
+        <p>Archivo: <code>routes/web.php</code></p>
+        <pre><code>
+use App\Http\Controllers\EstudianteController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::resource('estudiantes', EstudianteController::class);
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>7️⃣ Vistas (Blade)</h2>
+        <p>Crea la carpeta <code>resources/views/estudiantes</code> y dentro los siguientes archivos:</p>
+
+        <h3>index.blade.php</h3>
+        <pre><code>
+&lt;h1&gt;Listado de Estudiantes&lt;/h1&gt;
+&lt;a href="{{ route('estudiantes.create') }}"&gt;Agregar Nuevo&lt;/a&gt;
+
+&lt;table border="1"&gt;
+    &lt;tr&gt;
+        &lt;th&gt;ID&lt;/th&gt;
+        &lt;th&gt;Nombre&lt;/th&gt;
+        &lt;th&gt;Email&lt;/th&gt;
+        &lt;th&gt;Teléfono&lt;/th&gt;
+        &lt;th&gt;Acciones&lt;/th&gt;
+    &lt;/tr&gt;
+    @foreach($estudiantes as $e)
+    &lt;tr&gt;
+        &lt;td&gt;{{ $e-&gt;id }}&lt;/td&gt;
+        &lt;td&gt;{{ $e-&gt;nombre }}&lt;/td&gt;
+        &lt;td&gt;{{ $e-&gt;email }}&lt;/td&gt;
+        &lt;td&gt;{{ $e-&gt;telefono }}&lt;/td&gt;
+        &lt;td&gt;
+            &lt;a href="{{ route('estudiantes.edit', $e-&gt;id) }}"&gt;Editar&lt;/a&gt;
+            &lt;form action="{{ route('estudiantes.destroy', $e-&gt;id) }}" method="POST" style="display:inline;"&gt;
+                @csrf
+                @method('DELETE')
+                &lt;button type="submit"&gt;Eliminar&lt;/button&gt;
+            &lt;/form&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+    @endforeach
+&lt;/table&gt;
+        </code></pre>
+    </section>
+
+    <section>
+        <h2>8️⃣ Probar el CRUD</h2>
+        <p>Ejecuta el servidor:</p>
+        <pre><code class="cmd">php artisan serve</code></pre>
+        <p>Abre: <a href="http://127.0.0.1:8000/estudiantes" target="_blank">http://127.0.0.1:8000/estudiantes</a></p>
+        <p>Ya deberías poder crear, editar, listar y eliminar estudiantes 🎉</p>
+    </section>
+
+    <section>
+        <h2>🧩 Archivos Clave del Proyecto</h2>
+        <pre><code>
+app/
+ └── Http/
+     └── Controllers/
+         └── EstudianteController.php
+app/
+ └── Models/
+     └── Estudiante.php
+resources/
+ └── views/
+     └── estudiantes/
+         ├── index.blade.php
+         ├── create.blade.php
+         ├── edit.blade.php
+routes/
+ └── web.php
+database/
+ └── migrations/
+     └── xxxx_create_estudiantes_table.php
+        </code></pre>
+    </section>
+
+    <footer>
+        <p style="text-align:center; color:#aaa; margin-top:2rem;">
+            Hecho con ❤️ por Cristhian | Guía CRUD Laravel 2025
+        </p>
+    </footer>
+
+</body>
+</html>
