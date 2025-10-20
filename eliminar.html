@@ -1,0 +1,5 @@
+        <form action="{{ route('clases.destroy', $clase->id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta clase?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit">Eliminar</button>
+        </form>
