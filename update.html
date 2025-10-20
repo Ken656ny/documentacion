@@ -1,0 +1,12 @@
+<form action="{{ route('clases.update', $clase->id) }}" method="POST">
+    @csrf
+    @method('PUT')
+
+    <label for="nombre">Nombre:</label>
+    <input type="text" name="nombre" value="{{ $clase->nombre }}" required>
+
+    <label for="descripcion">Descripción:</label>
+    <textarea name="descripcion">{{ $clase->descripcion }}</textarea>
+
+    <button type="submit">Actualizar</button>
+</form>
