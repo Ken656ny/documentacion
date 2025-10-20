@@ -5,6 +5,7 @@ href="{{ asset('css/style.css') }}"
 
 instalar paquetes:
 composer require ibex/crud-generator --dev
+
 publicar configuraciones:
 php artisan vendor:publish --tag=crud
 
